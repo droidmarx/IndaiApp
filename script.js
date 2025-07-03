@@ -919,7 +919,7 @@ async function enviarTelegram(tipo) {
       });
     }
 
-    mensagem += `\n📍**Localização precisa:**\n`;
+    mensagem += `\n📍**Localização:**\n`;
     const simplifiedAddress = extractSimplifiedAddress(data.get('endereco'));
     mensagem += `${simplifiedAddress}`;
     
@@ -983,7 +983,7 @@ async function enviarTelegram(tipo) {
       });
     }
 
-    mensagem += `\n📍**Localização precisa:**\n`;
+    mensagem += `\n📍**Localização:**\n`;
     const simplifiedAddress = extractSimplifiedAddress(data.get('enderecoManutencao'));
     mensagem += `${simplifiedAddress}`;
     
