@@ -827,7 +827,7 @@ function initializeMapCTOs() {
     if (openGoogleMapsBtn) {
       openGoogleMapsBtn.addEventListener('click', function() {
         vibrate(50); // Haptic feedback
-        window.open('https://maps.google.com', '_blank');
+        window.open('https://goo.gl/maps/PBT7J31XKdRRZgRv6?g_st=ac', '_blank');
       });
     }
   } catch (error) {
