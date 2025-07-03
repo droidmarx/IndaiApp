@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IndaiaFibra</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="IndaiaFibra">
+  <meta name="description" content="Aplicativo para gerenciamento de instalações e manutenções de fibra óptica">
+  
+  <!-- PWA Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512x512.png">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- External CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1E40AF">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="flex justify-between items-center">
+      <div class="logo">
+        <img src="https://img.icons8.com/?size=2x&id=Sd1fJXRt5uTd&format=png" alt="Logo IndaiaFibra" id="logoIndaiaFibra">
+        <h1 class="logo-text">IndaiaFibra</h1>
+      </div>
+      <div class="status-indicator">
+        <span id="contadorInstalacoes">0 instalações este mês</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content-container">
+    <!-- Instalação Section -->
+    <section id="instalacao" class="tab-content fade-in">
+      <div class="glass-card section-spacing">
+        <form id="formInstalacao" class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Nova Instalação</h2>
+          
+          <div class="form-grid form-grid-2 field-spacing">
+            <div>
+              <label for="tipoTrabalho" class="form-label required">Tipo de trabalho</label>
+              <select id="tipoTrabalho" name="tipoTrabalho" required class="form-input">
+                <option value="">Selecione</option>
+                <option value="Instalação">Instalação</option>
+                <option value="Mudança de Endereço">Mudança de Endereço</option>
+              </select>
+              <p class="error-message">Por favor selecione o tipo de trabalho.</p>
+            </div>
+            <div>
+              <label for="tecnico" class="form-label required">Técnico</label>
+              <select id="tecnico" name="tecnico" required class="form-input">
+                <option value="">Selecione</option>
+                <option value="André">André</option>
+                <option value="Elvis">Elvis</option>
+                <option value="Guilherme">Guilherme</option>
+                <option value="Janderson">Janderson</option>
+                <option value="Robson">Robson</option>
+                <option value="Sérgio">Sérgio</option>
+              </select>
+              <p class="error-message">Por favor selecione o técnico.</p>
+            </div>
+          </div>
+
+          <div class="field-spacing">
+            <label for="cliente" class="form-label required">Cliente</label>
+            <input id="cliente" name="cliente" type="text" required class="form-input" placeholder="Nome do cliente">
+            <p class="error-message">Por favor informe o cliente.</p>
+          </div>
+
+          <div class="form-grid form-grid-2 field-spacing">
+            <div>
+              <label for="cto" class="form-label required">CTO</label>
+              <input id="cto" name="cto" type="text" required class="form-input" placeholder="Identificador CTO">
+              <p class="error-message">Por favor informe o CTO.</p>
+            </div>
+            <div>
+              <label for="porta" class="form-label required">Porta</label>
+              <select id="porta" name="porta" required class="form-input">
+                <option value="">Selecione</option>
+                <option value="1">Porta 1</option>
+                <option value="2">Porta 2</option>
+                <option value="3">Porta 3</option>
+                <option value="4">Porta 4</option>
+                <option value="5">Porta 5</option>
+                <option value="6">Porta 6</option>
+                <option value="7">Porta 7</option>
+                <option value="8">Porta 8</option>
+                <option value="9">Porta 9</option>
+                <option value="10">Porta 10</option>
+                <option value="11">Porta 11</option>
+                <option value="12">Porta 12</option>
+                <option value="13">Porta 13</option>
+                <option value="14">Porta 14</option>
+                <option value="15">Porta 15</option>
+                <option value="16">Porta 16</option>
+              </select>
+              <p class="error-message">Por favor selecione a porta.</p>
+            </div>
+          </div>
+
+          <div class="field-spacing">
+            <label for="sinalCTO" class="form-label">Sinal da CTO</label>
+            <input id="sinalCTO" name="sinalCTO" type="text" placeholder="-00,00" class="form-input signal-input" maxlength="6">
+            <p class="error-message">Por favor digite o sinal da CTO no formato -00,00.</p>
+          </div>
+
+          <div class="field-spacing">
+            <label for="sinalCliente" class="form-label">Sinal do Cliente</label>
+            <input id="sinalCliente" name="sinalCliente" type="text" placeholder="-00,00" class="form-input signal-input" maxlength="6">
+            <p class="error-message">Por favor digite o sinal do cliente no formato -00,00.</p>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label">Materiais para esta instalação</label>
+            <div id="materiaisSelecionaveis" class="mt-3"></div>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label required">Localização</label>
+            
+            <!-- Address search input -->
+            <div class="address-search-container">
+              <input id="endereco" name="endereco" type="text" class="form-input" placeholder="Digite o nome da rua para buscar no mapa">
+            </div>
+            
+            <!-- Suggestions positioned directly above map -->
+            <div id="enderecoSuggestions" class="search-suggestions-above-map"></div>
+            
+            <!-- Map container with loading overlay -->
+            <div id="mapInstalacao" class="map-container">
+              <div id="mapInstalacaoLoading" class="map-loading-overlay">
+                <div class="map-loading-spinner"></div>
+              </div>
+            </div>
+            
+            <button type="button" id="usarLocalizacao" class="btn btn-secondary w-full mt-4">
+              <i class="fas fa-map-marker-alt mr-2"></i> Usar minha localização atual
+            </button>
+          </div>
+
+          <button type="submit" class="btn btn-success w-full">
+            <i class="fab fa-telegram-plane mr-2"></i>
+            Enviar para Telegram
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Manutenção Section -->
+    <section id="manutencao" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <form id="formManutencao" class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Nova Manutenção</h2>
+          
+          <div class="form-grid form-grid-2 field-spacing">
+            <div>
+              <label for="tecnicoManutencao" class="form-label required">Nome do Técnico</label>
+              <select id="tecnicoManutencao" name="tecnicoManutencao" required class="form-input">
+                <option value="">Selecione</option>
+                <option value="André">André</option>
+                <option value="Elvis">Elvis</option>
+                <option value="Guilherme">Guilherme</option>
+                <option value="Janderson">Janderson</option>
+                <option value="Robson">Robson</option>
+                <option value="Sérgio">Sérgio</option>
+              </select>
+              <p class="error-message">Por favor selecione o técnico.</p>
+            </div>
+            <div>
+              <label for="clienteManutencao" class="form-label required">Nome do Cliente</label>
+              <input id="clienteManutencao" name="clienteManutencao" type="text" required class="form-input" placeholder="Nome do cliente">
+              <p class="error-message">Por favor informe o cliente.</p>
+            </div>
+          </div>
+
+          <div class="field-spacing">
+            <label for="problemaDescricao" class="form-label required">Descrição do Problema</label>
+            <textarea id="problemaDescricao" name="problemaDescricao" required class="form-input" rows="3" placeholder="Descreva o problema encontrado..."></textarea>
+            <p class="error-message">Por favor descreva o problema.</p>
+          </div>
+
+          <div class="field-spacing">
+            <label for="solucaoAplicada" class="form-label required">Solução Aplicada</label>
+            <textarea id="solucaoAplicada" name="solucaoAplicada" required class="form-input" rows="3" placeholder="Descreva a solução aplicada..."></textarea>
+            <p class="error-message">Por favor descreva a solução aplicada.</p>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label">Materiais Utilizados</label>
+            <div id="materiaisManutencao" class="mt-3"></div>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label required">Localização</label>
+            
+            <!-- Address search input -->
+            <div class="address-search-container">
+              <input id="enderecoManutencao" name="enderecoManutencao" type="text" class="form-input" placeholder="Digite o nome da rua para buscar no mapa">
+            </div>
+            
+            <!-- Suggestions positioned directly above map -->
+            <div id="enderecoManutencaoSuggestions" class="search-suggestions-above-map"></div>
+            
+            <!-- Map container with loading overlay -->
+            <div id="mapManutencao" class="map-container">
+              <div id="mapManutencaoLoading" class="map-loading-overlay">
+                <div class="map-loading-spinner"></div>
+              </div>
+            </div>
+            
+            <button type="button" id="usarLocalizacaoManutencao" class="btn btn-secondary w-full mt-4">
+              <i class="fas fa-map-marker-alt mr-2"></i> Usar minha localização atual
+            </button>
+          </div>
+
+          <button type="submit" class="btn btn-success w-full">
+            <i class="fab fa-telegram-plane mr-2"></i>
+            Enviar para Telegram
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Materiais Section -->
+    <section id="materiais" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Gerenciar Materiais</h2>
+          
+          <div class="form-grid form-grid-2 field-spacing">
+            <div>
+              <label for="nomeMaterial" class="form-label">Nome do Material</label>
+              <input id="nomeMaterial" type="text" class="form-input" placeholder="Ex: Cabo Óptico">
+            </div>
+            <div>
+              <label for="qtdMaterial" class="form-label">Quantidade padrão</label>
+              <input id="qtdMaterial" type="number" min="1" class="form-input" placeholder="Ex: 10">
+            </div>
+          </div>
+          
+          <button id="adicionarMaterial" class="btn btn-secondary mb-6">
+            <i class="fas fa-plus mr-2"></i>
+            Adicionar Material
+          </button>
+          
+          <div id="listaMateriais" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Histórico Section -->
+    <section id="historico" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Histórico</h2>
+          
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="todos">Todos</button>
+            <button class="filter-btn" data-filter="instalacao">Instalações</button>
+            <button class="filter-btn" data-filter="manutencao">Manutenções</button>
+          </div>
+          
+          <div class="search-container">
+            <input type="text" id="searchHistorico" placeholder="Pesquisar..." class="form-input search-input">
+            <i class="fas fa-search search-icon"></i>
+          </div>
+          
+          <div id="historicoInstalacoes" class="space-y-3 mb-6"></div>
+          
+          <button id="limparHistorico" class="btn btn-danger w-full">
+            <i class="fas fa-trash mr-2"></i>
+            Limpar Histórico
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mapa Section -->
+    <section id="mapa" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Mapa CTOs</h2>
+          
+          <div class="space-y-4">
+            <button id="openGoogleMaps" class="btn btn-secondary w-full">
+              <i class="fas fa-map-pin mr-2"></i>
+              Abrir Google Maps
+            </button>
+            
+            <div id="mapaCTOs" class="map-container"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Relatórios Section -->
+    <section id="relatorios" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Relatórios</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Instalações por Semana</h3>
+              <canvas id="installationChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Materiais Mais Utilizados</h3>
+              <canvas id="materialsChart" width="400" height="200"></canvas>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass-card p-4 text-center">
+              <div class="text-2xl font-bold text-primary" id="totalInstallations">0</div>
+              <div class="text-sm text-muted">Total Instalações</div>
+            </div>
+            <div class="glass-card p-4 text-center">
+              <div class="text-2xl font-bold text-secondary" id="totalMaintenance">0</div>
+              <div class="text-sm text-muted">Total Manutenções</div>
+            </div>
+            <div class="glass-card p-4 text-center">
+              <div class="text-2xl font-bold text-warning" id="totalMaterials">0</div>
+              <div class="text-sm text-muted">Materiais Cadastrados</div>
+            </div>
+            <div class="glass-card p-4 text-center">
+              <div class="text-2xl font-bold text-success" id="monthlyInstallations">0</div>
+              <div class="text-sm text-muted">Este Mês</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Configurações Section -->
+    <section id="configuracoes" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Configurações</h2>
+          
+          <div class="space-y-6">
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Tema</h3>
+              <button id="themeToggle" class="btn btn-ghost">
+                <i class="fas fa-moon"></i> Alternar Tema
+              </button>
+            </div>
+            
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Notificações</h3>
+              <label class="flex items-center">
+                <input type="checkbox" id="notificationsEnabled" class="mr-2">
+                <span>Ativar notificações push</span>
+              </label>
+            </div>
+            
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Feedback Tátil</h3>
+              <label class="flex items-center">
+                <input type="checkbox" id="hapticEnabled" class="mr-2" checked>
+                <span>Ativar vibração</span>
+              </label>
+            </div>
+            
+            <div class="glass-card p-4">
+              <h3 class="text-lg font-semibold mb-4">Gestos</h3>
+              <label class="flex items-center">
+                <input type="checkbox" id="gesturesEnabled" class="mr-2" checked>
+                <span>Ativar navegação por gestos</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Enhanced Navigation -->
+  <div class="nav-container">
+    <nav class="nav-glass">
+      <div class="flex justify-around">
+        <a href="#instalacao" class="nav-item active" data-tab="instalacao">
+          <i class="fas fa-tools"></i>
+          <span>Instalação</span>
+        </a>
+        <a href="#manutencao" class="nav-item" data-tab="manutencao">
+          <i class="fas fa-wrench"></i>
+          <span>Manutenção</span>
+        </a>
+        <a href="#materiais" class="nav-item" data-tab="materiais">
+          <i class="fas fa-boxes"></i>
+          <span>Materiais</span>
+        </a>
+        <a href="#historico" class="nav-item" data-tab="historico">
+          <i class="fas fa-history"></i>
+          <span>Histórico</span>
+        </a>
+        <a href="#mapa" class="nav-item" data-tab="mapa">
+          <i class="fas fa-map"></i>
+          <span>Mapa</span>
+        </a>
+        <a href="#relatorios" class="nav-item" data-tab="relatorios">
+          <i class="fas fa-chart-bar"></i>
+          <span>Relatórios</span>
+        </a>
+        <a href="#configuracoes" class="nav-item" data-tab="configuracoes">
+          <i class="fas fa-cog"></i>
+          <span>Ajustes</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
+
