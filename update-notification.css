@@ -1,0 +1,59 @@
+/* Estilos para o componente de notificação de versão */
+.update-notification-container {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.update-notification {
+  background-color: #2563eb;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  margin-top: 0;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.update-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.update-notification-content {
+  text-align: center;
+}
+
+.update-notification-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.update-notification-version {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Versão para dispositivos móveis */
+@media (max-width: 640px) {
+  .update-notification {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 6px;
+  }
+}
+

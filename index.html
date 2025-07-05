@@ -26,6 +26,7 @@
   <link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="update-notification.css" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1E40AF">
   <link rel="stylesheet" href="style.css">
@@ -126,6 +127,11 @@
           </div>
 
           <div class="field-spacing">
+            <label for="observacoes" class="form-label">Observações</label>
+            <textarea id="observacoes" name="observacoes" class="form-input" rows="3" placeholder="Observações adicionais sobre a instalação..."></textarea>
+          </div>
+
+          <div class="field-spacing">
             <label class="form-label">Materiais para esta instalação</label>
             <div id="materiaisSelecionaveis" class="mt-3"></div>
           </div>
@@ -201,6 +207,11 @@
           </div>
 
           <div class="field-spacing">
+            <label for="observacoesManutencao" class="form-label">Observações</label>
+            <textarea id="observacoesManutencao" name="observacoesManutencao" class="form-input" rows="3" placeholder="Observações adicionais sobre a manutenção..."></textarea>
+          </div>
+
+          <div class="field-spacing">
             <label class="form-label">Materiais Utilizados</label>
             <div id="materiaisManutencao" class="mt-3"></div>
           </div>
@@ -273,6 +284,7 @@
             <button class="filter-btn active" data-filter="todos">Todos</button>
             <button class="filter-btn" data-filter="instalacao">Instalações</button>
             <button class="filter-btn" data-filter="manutencao">Manutenções</button>
+            <button class="filter-btn" data-filter="retirada">Retiradas</button>
           </div>
           
           <div class="search-container">
@@ -300,6 +312,11 @@
             <button id="openGoogleMaps" class="btn btn-secondary w-full">
               <i class="fas fa-map-pin mr-2"></i>
               Abrir Google Maps
+            </button>
+            
+            <button id="openGoogleEarth" class="btn btn-secondary w-full">
+              <i class="fas fa-globe mr-2"></i>
+              Abrir Google Earth
             </button>
             
             <div id="mapaCTOs" class="map-container"></div>
@@ -334,6 +351,10 @@
             <div class="glass-card p-4 text-center">
               <div class="text-2xl font-bold text-secondary" id="totalMaintenance">0</div>
               <div class="text-sm text-muted">Total Manutenções</div>
+            </div>
+            <div class="glass-card p-4 text-center">
+              <div class="text-2xl font-bold text-danger" id="totalRetiradas">0</div>
+              <div class="text-sm text-muted">Total Retiradas</div>
             </div>
             <div class="glass-card p-4 text-center">
               <div class="text-2xl font-bold text-warning" id="totalMaterials">0</div>
@@ -385,8 +406,78 @@
                 <span>Ativar navegação por gestos</span>
               </label>
             </div>
+            
+            <div id="update-notification-placeholder" class="glass-card p-4">
+              <!-- A notificação de atualização será inserida aqui pelo JavaScript -->
+            </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Retiradas Section -->
+    <section id="retiradas" class="tab-content hidden">
+      <div class="glass-card section-spacing">
+        <form id="formRetiradas" class="p-6">
+          <h2 class="text-xl font-semibold mb-6 text-center">Nova Retirada</h2>
+          
+          <div class="field-spacing">
+            <label for="clienteRetirada" class="form-label required">Nome do Cliente</label>
+            <input id="clienteRetirada" name="clienteRetirada" type="text" required class="form-input" placeholder="Nome do cliente">
+            <p class="error-message">Por favor informe o cliente.</p>
+          </div>
+
+          <div class="field-spacing">
+            <label for="observacoesRetirada" class="form-label">Observações</label>
+            <textarea id="observacoesRetirada" name="observacoesRetirada" class="form-input" rows="3" placeholder="Observações sobre a retirada..."></textarea>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label required">Localização</label>
+            
+            <!-- Address search input -->
+            <div class="address-search-container">
+              <input id="enderecoRetirada" name="enderecoRetirada" type="text" class="form-input" placeholder="Digite o nome da rua para buscar no mapa">
+            </div>
+            
+            <!-- Suggestions positioned directly above map -->
+            <div id="enderecoRetiradaSuggestions" class="search-suggestions-above-map"></div>
+            
+            <!-- Map container with loading overlay -->
+            <div id="mapRetirada" class="map-container">
+              <div id="mapRetiradaLoading" class="map-loading-overlay">
+                <div class="map-loading-spinner"></div>
+              </div>
+            </div>
+            
+            <button type="button" id="usarLocalizacaoRetirada" class="btn btn-secondary w-full mt-4">
+              <i class="fas fa-map-marker-alt mr-2"></i> Usar minha localização atual
+            </button>
+          </div>
+
+          <div class="field-spacing">
+            <label class="form-label">Fotos</label>
+            <div class="flex flex-col gap-4">
+              <div class="flex gap-4">
+                <button type="button" id="tirarFoto" class="btn btn-secondary flex-1">
+                  <i class="fas fa-camera mr-2"></i> Tirar Foto
+                </button>
+                <label for="uploadFoto" class="btn btn-secondary flex-1 flex justify-center items-center cursor-pointer">
+                  <i class="fas fa-upload mr-2"></i> Carregar Foto
+                  <input type="file" id="uploadFoto" accept="image/*" class="hidden" multiple>
+                </label>
+              </div>
+              <div id="fotosPreview" class="grid grid-cols-2 gap-2 mt-2">
+                <!-- Previews de fotos serão adicionados aqui -->
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success w-full">
+            <i class="fas fa-save mr-2"></i>
+            Registrar Retirada
+          </button>
+        </form>
       </div>
     </section>
   </main>
@@ -402,6 +493,10 @@
         <a href="#manutencao" class="nav-item" data-tab="manutencao">
           <i class="fas fa-wrench"></i>
           <span>Manutenção</span>
+        </a>
+        <a href="#retiradas" class="nav-item" data-tab="retiradas">
+          <i class="fas fa-trash-alt"></i>
+          <span>Retiradas</span>
         </a>
         <a href="#materiais" class="nav-item" data-tab="materiais">
           <i class="fas fa-boxes"></i>
@@ -431,13 +526,14 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="update-notification.js"></script>
   <script src="script.js"></script>
   
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('/service-worker.js')
           .then(function(registration) {
             console.log('ServiceWorker registration successful with scope: ', registration.scope);
           }, function(err) {

@@ -40,7 +40,7 @@ function showInstallButton() {
     installButton.className = 'install-btn';
     installButton.style.cssText = `
       position: fixed;
-      bottom: 20px;
+      bottom: 100px;
       right: 20px;
       background: #2563eb;
       color: white;
@@ -100,10 +100,10 @@ function showUpdateNotification() {
   `;
   document.body.appendChild(updateNotification);
   
-  // Auto remove after 10 seconds
+  // Auto remove after 5 seconds
   setTimeout(() => {
     updateNotification.remove();
-  }, 10000);
+  }, 5000);
 }
 
 // All original functions preserved and enhanced
@@ -111,6 +111,7 @@ function showUpdateNotification() {
 // Global variables
 let map, marker;
 let mapManutencao, markerManutencao;
+let mapRetirada, markerRetirada;
 let mapCTOs;
 
 let materiais = JSON.parse(localStorage.getItem('materiais')) || [];
@@ -166,6 +167,7 @@ async function initializeApp() {
       initializeMap();
       initializeMapManutencao();
       initializeMapCTOs();
+      initializeMapRetirada(); // Add retirada map initialization
     }, 500);
     
     initializeSignalInputs();
@@ -173,6 +175,7 @@ async function initializeApp() {
     initializeMateriais();
     initializeHistorico();
     initializeAddressSearch();
+    initializeRetiradas(); // Add retiradas initialization
     
     // Initialize enhanced features
     initializeReports();
@@ -546,6 +549,13 @@ function updateMapLocation(lat, lng, type) {
     } else {
       markerManutencao = L.marker([lat, lng]).addTo(mapManutencao);
     }
+  } else if (type === 'retirada' && mapRetirada) {
+    mapRetirada.setView([lat, lng], 18);
+    if (markerRetirada) {
+      markerRetirada.setLatLng([lat, lng]);
+    } else {
+      markerRetirada = L.marker([lat, lng]).addTo(mapRetirada);
+    }
   }
 }
 
@@ -827,7 +837,15 @@ function initializeMapCTOs() {
     if (openGoogleMapsBtn) {
       openGoogleMapsBtn.addEventListener('click', function() {
         vibrate(50); // Haptic feedback
-        window.open('https://goo.gl/maps/PBT7J31XKdRRZgRv6?g_st=ac', '_blank');
+        window.open('https://goo.gl/maps/jjc4aQSHLzj16Ykq5?g_st=ac', '_blank');
+      });
+    }
+
+    const openGoogleEarthBtn = document.getElementById('openGoogleEarth');
+    if (openGoogleEarthBtn) {
+      openGoogleEarthBtn.addEventListener('click', function() {
+        vibrate(50); // Haptic feedback
+        window.open('https://earth.app.goo.gl/?apn=com.google.earth&isi=293622097&ius=googleearth&link=https%3a%2f%2fearth.google.com%2fweb%2f%40-23.05937339,-47.31164855,637.82978119a,3835.30342676d,30.00033061y,0h,0t,0r%2fdata%3dMigKJgokCiAxbF9jaDZxdXB1WHowRG53Nmg5VmhvbTFZMWczaWJhWSAC', '_blank');
       });
     }
   } catch (error) {
@@ -858,7 +876,7 @@ function initializeFormHandlers() {
   }
 }
 
-// Function to extract simplified address (street name, number, neighborhood)
+// Function to extract simplified address (only street name)
 function extractSimplifiedAddress(fullAddress) {
   if (!fullAddress) return '';
   
@@ -867,29 +885,8 @@ function extractSimplifiedAddress(fullAddress) {
   
   if (parts.length === 0) return fullAddress;
   
-  // Extract relevant parts: usually the first 3 parts contain street name, number, and neighborhood
-  // Format: "Street Name, Number, Neighborhood" or similar variations
-  let simplifiedParts = [];
-  
-  // Take the first part (usually contains street name and number)
-  if (parts[0]) {
-    simplifiedParts.push(parts[0]);
-  }
-  
-  // Look for neighborhood in the next few parts
-  // Skip very generic terms and look for actual neighborhood names
-  for (let i = 1; i < Math.min(parts.length, 4); i++) {
-    const part = parts[i];
-    // Skip very generic location terms
-    if (!part.match(/(região|estado|país|brasil|brazil|cep|zip)/i) && 
-        !part.match(/^\d{5}-?\d{3}$/) && // Skip ZIP codes
-        part.length > 2) {
-      simplifiedParts.push(part);
-      break; // Take only the first relevant neighborhood/area
-    }
-  }
-  
-  return simplifiedParts.join(', ');
+  // Return only the first part (street name)
+  return parts[0];
 }
 
 // ENHANCED TELEGRAM MESSAGE SENDING WITH CLIPBOARD FUNCTIONALITY
@@ -911,6 +908,12 @@ async function enviarTelegram(tipo) {
     mensagem += `🔌 **Porta:** ${data.get('porta')}\n`;
     mensagem += `📶 **Sinal CTO:** ${data.get('sinalCTO')} dBm\n`;
     mensagem += `📶 **Sinal Cliente:** ${data.get('sinalCliente')} dBm\n`;
+    
+    // Adicionar observações se existirem
+    const observacoes = data.get('observacoes');
+    if (observacoes && observacoes.trim() !== '') {
+      mensagem += `\n📝 **Observações:**\n${observacoes}\n`;
+    }
     
     if (materiaisSelecionados.length > 0) {
       mensagem += `\n📦 **Materiais Utilizados:**\n`;
@@ -951,6 +954,7 @@ async function enviarTelegram(tipo) {
       porta: data.get('porta'),
       sinalCTO: data.get('sinalCTO'),
       sinalCliente: data.get('sinalCliente'),
+      observacoes: data.get('observacoes'),
       endereco: data.get('endereco'),
       materiais: materiaisSelecionados,
       data: new Date().toLocaleDateString('pt-BR'),
@@ -975,6 +979,12 @@ async function enviarTelegram(tipo) {
     mensagem += `🙍 **Cliente:** ${data.get('clienteManutencao')}\n`;
     mensagem += `⚠️ **Descrição do Problema:** ${data.get('problemaDescricao')}\n`;
     mensagem += `✅ **Solução Aplicada:** ${data.get('solucaoAplicada')}\n`;
+
+    // Adicionar observações se existirem
+    const observacoes = data.get('observacoesManutencao');
+    if (observacoes && observacoes.trim() !== '') {
+      mensagem += `\n📝 **Observações:**\n${observacoes}\n`;
+    }
 
     if (materiaisSelecionados.length > 0) {
       mensagem += `\n📦 **Materiais Utilizados:**\n`;
@@ -1012,6 +1022,7 @@ async function enviarTelegram(tipo) {
       cliente: data.get('clienteManutencao'),
       problema: data.get('problemaDescricao'),
       solucao: data.get('solucaoAplicada'),
+      observacoes: data.get('observacoesManutencao'),
       endereco: data.get('enderecoManutencao'),
       materiais: materiaisSelecionados,
       data: new Date().toLocaleDateString('pt-BR'),
@@ -1406,8 +1417,19 @@ function renderHistorico() {
     div.setAttribute('data-id', item.id);
     
     const isInstalacao = item.tipo === 'instalacao';
-    const icon = isInstalacao ? 'fas fa-tools' : 'fas fa-wrench';
-    const typeLabel = isInstalacao ? (item.tipoTrabalho || 'Instalação') : 'Manutenção';
+    const isRetirada = item.tipo === 'retirada';
+    
+    let icon, typeLabel;
+    if (isInstalacao) {
+      icon = 'fas fa-tools';
+      typeLabel = item.tipoTrabalho || 'Instalação';
+    } else if (isRetirada) {
+      icon = 'fas fa-trash-alt';
+      typeLabel = 'Retirada';
+    } else {
+      icon = 'fas fa-wrench';
+      typeLabel = 'Manutenção';
+    }
     
     div.innerHTML = `
       <div class="flex justify-between items-start">
@@ -1420,6 +1442,8 @@ function renderHistorico() {
           <p class="text-sm" style="color: var(--text-secondary)">${item.data} - ${item.tecnico}</p>
           ${isInstalacao ? 
             `<p class="text-sm" style="color: var(--text-muted)">CTO: ${item.cto} - Porta: ${item.porta}</p>` :
+            isRetirada ?
+            `<p class="text-sm" style="color: var(--text-muted)">Endereço: ${item.endereco.substring(0, 50)}${item.endereco.length > 50 ? '...' : ''}</p>` :
             `<p class="text-sm" style="color: var(--text-muted)">Problema: ${item.problema.substring(0, 50)}...</p>`
           }
         </div>
@@ -1431,7 +1455,7 @@ function renderHistorico() {
         </div>
       </div>
       <div class="history-details">
-        ${isInstalacao ? renderInstalacaoDetails(item) : renderManutencaoDetails(item)}
+        ${isInstalacao ? renderInstalacaoDetails(item) : isRetirada ? renderRetiradaDetails(item) : renderManutencaoDetails(item)}
       </div>
     `;
     
@@ -1463,6 +1487,9 @@ function renderInstalacaoDetails(item) {
   const mapLink = item.latitude && item.longitude ? 
     `https://www.google.com/maps?q=${item.latitude},${item.longitude}` : '#';
   
+  // Extract simplified address (only street name)
+  const simplifiedAddress = extractSimplifiedAddress(item.endereco);
+  
   return `
     <div class="grid grid-cols-2 gap-4 text-sm">
       <div><strong>Tipo:</strong> ${item.tipoTrabalho}</div>
@@ -1470,7 +1497,7 @@ function renderInstalacaoDetails(item) {
       <div><strong>Porta:</strong> ${item.porta}</div>
       <div><strong>Sinal CTO:</strong> ${item.sinalCTO} dBm</div>
       <div><strong>Sinal Cliente:</strong> ${item.sinalCliente} dBm</div>
-      <div class="col-span-2"><strong>Endereço:</strong> ${item.endereco}</div>
+      <div class="col-span-2"><strong>Endereço:</strong> ${simplifiedAddress}</div>
       ${item.materiais && item.materiais.length > 0 ? `
         <div class="col-span-2">
           <strong>Materiais:</strong>
@@ -1494,11 +1521,14 @@ function renderManutencaoDetails(item) {
   const mapLink = item.latitude && item.longitude ? 
     `https://www.google.com/maps?q=${item.latitude},${item.longitude}` : '#';
   
+  // Extract simplified address (only street name)
+  const simplifiedAddress = extractSimplifiedAddress(item.endereco);
+  
   return `
     <div class="grid grid-cols-1 gap-4 text-sm">
       <div><strong>Problema:</strong> ${item.problema}</div>
       <div><strong>Solução:</strong> ${item.solucao}</div>
-      <div><strong>Endereço:</strong> ${item.endereco}</div>
+      <div><strong>Endereço:</strong> ${simplifiedAddress}</div>
       ${item.materiais && item.materiais.length > 0 ? `
         <div>
           <strong>Materiais Utilizados:</strong>
@@ -1729,14 +1759,14 @@ function initializeGestures() {
 }
 
 function navigateToNextTab() {
-  const tabs = ['instalacao', 'manutencao', 'materiais', 'historico', 'mapa', 'relatorios', 'configuracoes'];
+  const tabs = ['instalacao', 'manutencao', 'retiradas', 'materiais', 'historico', 'mapa', 'relatorios', 'configuracoes'];
   const currentIndex = tabs.indexOf(currentTab);
   const nextIndex = (currentIndex + 1) % tabs.length;
   switchTab(tabs[nextIndex]);
 }
 
 function navigateToPrevTab() {
-  const tabs = ['instalacao', 'manutencao', 'materiais', 'historico', 'mapa', 'relatorios', 'configuracoes'];
+  const tabs = ['instalacao', 'manutencao', 'retiradas', 'materiais', 'historico', 'mapa', 'relatorios', 'configuracoes'];
   const currentIndex = tabs.indexOf(currentTab);
   const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
   switchTab(tabs[prevIndex]);
@@ -1958,11 +1988,59 @@ function renderMaterialsChart() {
 }
 
 function getWeeklyInstallations() {
-  // Implementation for weekly installation data
-  const weeks = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
-  const data = [12, 19, 8, 15]; // Sample data
+  // Implementação para dados reais de instalação semanal
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
   
-  return { labels: weeks, data: data };
+  // Definir as semanas do mês atual
+  const weeks = [];
+  const weekData = [0, 0, 0, 0, 0]; // Até 5 semanas em um mês
+  
+  // Obter o primeiro dia do mês
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  
+  // Obter o último dia do mês
+  const lastDay = new Date(currentYear, currentMonth + 1, 0);
+  
+  // Calcular o número de semanas no mês
+  const numWeeks = Math.ceil((lastDay.getDate() + firstDay.getDay()) / 7);
+  
+  // Criar rótulos para as semanas
+  for (let i = 0; i < numWeeks; i++) {
+    weeks.push(`Sem ${i + 1}`);
+  }
+  
+  // Filtrar instalações do mês atual
+  const installationsThisMonth = historico.filter(item => {
+    if (item.tipo !== 'instalacao') return false;
+    
+    // Converter a data do formato brasileiro (DD/MM/YYYY) para um objeto Date
+    const parts = item.data.split('/');
+    const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    
+    return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+  });
+  
+  // Agrupar instalações por semana
+  installationsThisMonth.forEach(item => {
+    const parts = item.data.split('/');
+    const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    
+    // Calcular a semana do mês (0-indexed)
+    const weekOfMonth = Math.floor((itemDate.getDate() - 1 + firstDay.getDay()) / 7);
+    
+    // Incrementar o contador para essa semana
+    if (weekOfMonth >= 0 && weekOfMonth < weekData.length) {
+      weekData[weekOfMonth]++;
+    }
+  });
+  
+  // Retornar apenas as semanas que têm dados
+  return { 
+    labels: weeks.slice(0, numWeeks), 
+    data: weekData.slice(0, numWeeks) 
+  };
 }
 
 function getRealMaterialData() {
@@ -1976,18 +2054,35 @@ function getRealMaterialData() {
 function renderStatistics() {
   const totalInstallations = historico.filter(item => item.tipo === 'instalacao').length;
   const totalMaintenance = historico.filter(item => item.tipo === 'manutencao').length;
+  const totalRetiradas = historico.filter(item => item.tipo === 'retirada').length;
   const totalMaterials = materiais.length;
-  const monthlyInstallations = totalInstallations; // For now, same as total
+  
+  // Calcular instalações do mês atual
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  const monthlyInstallations = historico.filter(item => {
+    if (item.tipo !== 'instalacao') return false;
+    
+    // Converter a data do formato brasileiro (DD/MM/YYYY) para um objeto Date
+    const parts = item.data.split('/');
+    const itemDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    
+    return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+  }).length;
   
   const totalInstallationsEl = document.getElementById('totalInstallations');
   const totalMaintenanceEl = document.getElementById('totalMaintenance');
   const totalMaterialsEl = document.getElementById('totalMaterials');
   const monthlyInstallationsEl = document.getElementById('monthlyInstallations');
+  const totalRetiradasEl = document.getElementById('totalRetiradas');
   
   if (totalInstallationsEl) totalInstallationsEl.textContent = totalInstallations;
   if (totalMaintenanceEl) totalMaintenanceEl.textContent = totalMaintenance;
   if (totalMaterialsEl) totalMaterialsEl.textContent = totalMaterials;
   if (monthlyInstallationsEl) monthlyInstallationsEl.textContent = monthlyInstallations;
+  if (totalRetiradasEl) totalRetiradasEl.textContent = totalRetiradas;
 }
 
 // Settings Implementation
@@ -2049,3 +2144,462 @@ function renderAllSections() {
   renderHistorico();
   updateContador();
 }
+
+// RETIRADAS FUNCTIONALITY
+let fotosRetirada = [];
+
+function initializeRetiradas() {
+  // Inicializar o formulário de retiradas
+  const formRetiradas = document.getElementById('formRetiradas');
+  if (formRetiradas) {
+    formRetiradas.addEventListener('submit', function(e) {
+      e.preventDefault();
+      vibrate(100); // Haptic feedback
+      enviarTelegramRetirada();
+    });
+  }
+  
+  // Inicializar o botão de usar localização atual
+  const usarLocalizacaoRetiradaBtn = document.getElementById('usarLocalizacaoRetirada');
+  if (usarLocalizacaoRetiradaBtn) {
+    usarLocalizacaoRetiradaBtn.addEventListener('click', function() {
+      vibrate(50); // Haptic feedback
+      getCurrentLocationRetirada();
+    });
+  }
+  
+  // Inicializar a busca de endereço
+  const enderecoRetiradaInput = document.getElementById('enderecoRetirada');
+  const suggestionsRetiradaContainer = document.getElementById('enderecoRetiradaSuggestions');
+  
+  if (enderecoRetiradaInput && suggestionsRetiradaContainer) {
+    enderecoRetiradaInput.addEventListener('input', debounce(function(event) {
+      const target = event.target || this;
+      const query = target.value ? target.value.trim() : '';
+      if (query.length > 2) {
+        searchAddress(query, suggestionsRetiradaContainer, (place) => {
+          enderecoRetiradaInput.value = place.display_name;
+          suggestionsRetiradaContainer.innerHTML = '';
+          suggestionsRetiradaContainer.classList.remove('show');
+          
+          // Update current location data
+          currentLocation.lat = parseFloat(place.lat);
+          currentLocation.lng = parseFloat(place.lon);
+          currentLocation.address = place.display_name;
+          
+          // Update map for retirada
+          updateMapLocation(currentLocation.lat, currentLocation.lng, 'retirada');
+          
+          showToast('📍 Localização encontrada e atualizada no mapa!', 'success');
+          vibrate(50);
+        });
+      } else {
+        suggestionsRetiradaContainer.innerHTML = '';
+        suggestionsRetiradaContainer.classList.remove('show');
+      }
+    }, 300));
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!enderecoRetiradaInput.contains(e.target) && !suggestionsRetiradaContainer.contains(e.target)) {
+        suggestionsRetiradaContainer.classList.remove('show');
+      }
+    });
+  }
+  
+  // Inicializar a funcionalidade de fotos
+  initializePhotoFunctionality();
+}
+
+// Function to get current location for retirada
+function getCurrentLocationRetirada() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      
+      // Update current location data
+      currentLocation.lat = lat;
+      currentLocation.lng = lon;
+      
+      if (mapRetirada) {
+        mapRetirada.setView([lat, lon], 18);
+        if (markerRetirada) {
+          markerRetirada.setLatLng([lat, lon]);
+        } else {
+          markerRetirada = L.marker([lat, lon]).addTo(mapRetirada);
+        }
+      }
+      
+      // Reverse geocoding to get address
+      reverseGeocodeAndUpdateInput(lat, lon, 'enderecoRetirada');
+      
+      showToast('Localização obtida com sucesso!', 'success');
+    }, function(error) {
+      console.error('Geolocation error:', error);
+      showToast('Erro ao obter localização', 'error');
+    });
+  } else {
+    showToast('Geolocalização não suportada', 'error');
+  }
+}
+
+function initializeMapRetirada() {
+  const mapContainer = document.getElementById('mapRetirada');
+  const loadingOverlay = document.getElementById('mapRetiradaLoading');
+  
+  if (!mapContainer) return;
+  
+  try {
+    // Clear any existing map
+    if (mapRetirada) {
+      mapRetirada.remove();
+      mapRetirada = null;
+    }
+    
+    // Show loading overlay
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'flex';
+    }
+    
+    mapRetirada = L.map(mapContainer, {
+      center: [-23.5505, -46.6333],
+      zoom: 13,
+      zoomControl: true,
+      attributionControl: true
+    });
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(mapRetirada);
+    
+    // Add click event to map
+    mapRetirada.on('click', function(e) {
+      // Update marker position
+      updateMapLocation(e.latlng.lat, e.latlng.lng, 'retirada');
+      
+      // Update current location data
+      currentLocation.lat = e.latlng.lat;
+      currentLocation.lng = e.latlng.lng;
+      
+      // Get address from coordinates (reverse geocoding)
+      reverseGeocodeAndUpdateInput(e.latlng.lat, e.latlng.lng, 'enderecoRetirada');
+      
+      vibrate(50);
+      showToast('📍 Localização atualizada!', 'success');
+    });
+    
+    // Hide loading overlay after map is ready
+    mapRetirada.whenReady(function() {
+      if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error initializing retirada map:', error);
+    showToast('Erro ao carregar mapa', 'error');
+    
+    // Hide loading overlay on error
+    if (loadingOverlay) {
+      loadingOverlay.style.display = 'none';
+    }
+  }
+}
+
+function initializePhotoFunctionality() {
+  // Inicializar o botão de tirar foto
+  const tirarFotoBtn = document.getElementById('tirarFoto');
+  if (tirarFotoBtn) {
+    tirarFotoBtn.addEventListener('click', function() {
+      vibrate(50); // Haptic feedback
+      capturePhoto();
+    });
+  }
+  
+  // Inicializar o input de upload de foto
+  const uploadFotoInput = document.getElementById('uploadFoto');
+  if (uploadFotoInput) {
+    uploadFotoInput.addEventListener('change', function(e) {
+      vibrate(50); // Haptic feedback
+      handleFileUpload(e.target.files);
+    });
+  }
+}
+
+function capturePhoto() {
+  // Verificar se a API de câmera está disponível
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('Câmera não disponível neste dispositivo', 'error');
+    return;
+  }
+  
+  // Criar elementos para captura de foto
+  const videoElement = document.createElement('video');
+  videoElement.setAttribute('autoplay', '');
+  videoElement.setAttribute('playsinline', '');
+  
+  const canvasElement = document.createElement('canvas');
+  
+  // Criar modal para exibir a câmera
+  const modal = document.createElement('div');
+  modal.className = 'camera-modal';
+  modal.innerHTML = `
+    <div class="camera-container">
+      <div class="camera-preview"></div>
+      <div class="camera-controls">
+        <button id="captureBtn" class="btn btn-success">
+          <i class="fas fa-camera"></i>
+        </button>
+        <button id="cancelCaptureBtn" class="btn btn-danger">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Adicionar o vídeo ao preview
+  const previewContainer = modal.querySelector('.camera-preview');
+  previewContainer.appendChild(videoElement);
+  
+  // Iniciar a câmera
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+    .then(function(stream) {
+      videoElement.srcObject = stream;
+      
+      // Configurar botão de captura
+      const captureBtn = document.getElementById('captureBtn');
+      if (captureBtn) {
+        captureBtn.addEventListener('click', function() {
+          vibrate(100); // Haptic feedback
+          
+          // Capturar a imagem do vídeo
+          canvasElement.width = videoElement.videoWidth;
+          canvasElement.height = videoElement.videoHeight;
+          canvasElement.getContext('2d').drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+          
+          // Converter para blob
+          canvasElement.toBlob(function(blob) {
+            // Adicionar a foto à lista
+            const photoFile = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            addPhotoToPreview(photoFile);
+            
+            // Fechar a câmera
+            closeCamera(stream, modal);
+          }, 'image/jpeg', 0.8);
+        });
+      }
+      
+      // Configurar botão de cancelar
+      const cancelBtn = document.getElementById('cancelCaptureBtn');
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+          vibrate(50); // Haptic feedback
+          closeCamera(stream, modal);
+        });
+      }
+    })
+    .catch(function(error) {
+      console.error('Error accessing camera:', error);
+      showToast('Erro ao acessar a câmera', 'error');
+      document.body.removeChild(modal);
+    });
+}
+
+function closeCamera(stream, modal) {
+  // Parar todos os tracks do stream
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+  
+  // Remover o modal
+  if (modal && modal.parentNode) {
+    modal.parentNode.removeChild(modal);
+  }
+}
+
+function handleFileUpload(files) {
+  if (!files || files.length === 0) return;
+  
+  // Adicionar cada arquivo à lista de fotos
+  Array.from(files).forEach(file => {
+    if (file.type.startsWith('image/')) {
+      addPhotoToPreview(file);
+    } else {
+      showToast('Apenas imagens são permitidas', 'error');
+    }
+  });
+}
+
+function addPhotoToPreview(file) {
+  // Adicionar a foto à lista
+  fotosRetirada.push(file);
+  
+  // Criar URL para preview
+  const imageUrl = URL.createObjectURL(file);
+  
+  // Adicionar ao container de preview
+  const previewContainer = document.getElementById('fotosPreview');
+  if (previewContainer) {
+    const photoDiv = document.createElement('div');
+    photoDiv.className = 'photo-preview';
+    photoDiv.innerHTML = `
+      <img src="${imageUrl}" alt="Foto" class="w-full h-32 object-cover rounded">
+      <button type="button" class="remove-photo-btn" data-index="${fotosRetirada.length - 1}">
+        <i class="fas fa-trash"></i>
+      </button>
+    `;
+    
+    previewContainer.appendChild(photoDiv);
+    
+    // Adicionar evento para remover a foto
+    const removeBtn = photoDiv.querySelector('.remove-photo-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', function() {
+        vibrate(50); // Haptic feedback
+        const index = parseInt(this.getAttribute('data-index'));
+        removePhoto(index, photoDiv);
+      });
+    }
+  }
+  
+  showToast('Foto adicionada com sucesso!', 'success');
+}
+
+function removePhoto(index, element) {
+  // Remover a foto da lista
+  if (index >= 0 && index < fotosRetirada.length) {
+    fotosRetirada.splice(index, 1);
+    
+    // Remover o elemento do DOM
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+    }
+    
+    // Atualizar os índices dos botões de remoção
+    const removeButtons = document.querySelectorAll('.remove-photo-btn');
+    removeButtons.forEach((btn, i) => {
+      btn.setAttribute('data-index', i);
+    });
+    
+    showToast('Foto removida', 'info');
+  }
+}
+
+function enviarTelegramRetirada() {
+  const form = document.getElementById('formRetiradas');
+  if (!form) return;
+  
+  const data = new FormData(form);
+  
+  // Validar campos obrigatórios
+  const clienteRetirada = data.get('clienteRetirada');
+  const enderecoRetirada = data.get('enderecoRetirada');
+  
+  if (!clienteRetirada || !enderecoRetirada) {
+    showToast('Preencha todos os campos obrigatórios', 'error');
+    return;
+  }
+  
+  // Adicionar ao histórico
+  const registro = {
+    id: Date.now(),
+    tipo: 'retirada',
+    tecnico: 'Técnico', // Pode ser alterado conforme necessário
+    cliente: clienteRetirada,
+    observacoes: data.get('observacoesRetirada') || '',
+    endereco: enderecoRetirada,
+    fotos: fotosRetirada.slice(), // Cópia das fotos
+    data: new Date().toLocaleDateString('pt-BR'),
+    latitude: currentLocation.lat,
+    longitude: currentLocation.lng
+  };
+  
+  // Garantir que o histórico existe
+  if (!historico) {
+    historico = [];
+  }
+  
+  historico.unshift(registro);
+  
+  // Limitar o número de registros
+  if (historico.length > MAX_HISTORY_RECORDS) {
+    historico.pop();
+  }
+  
+  // Salvar no localStorage
+  try {
+    localStorage.setItem('historico', JSON.stringify(historico));
+    console.log('Histórico salvo:', historico);
+  } catch (error) {
+    console.error('Erro ao salvar histórico:', error);
+    showToast('Erro ao salvar no histórico', 'error');
+    return;
+  }
+  
+  // Atualizar a interface
+  renderHistorico();
+  
+  showToast('Retirada registrada com sucesso!', 'success');
+  vibrate([100, 50, 100]);
+  
+  // Limpar o formulário
+  form.reset();
+  
+  // Limpar as fotos
+  fotosRetirada = [];
+  const previewContainer = document.getElementById('fotosPreview');
+  if (previewContainer) {
+    previewContainer.innerHTML = '';
+  }
+  
+  // Resetar o mapa
+  if (mapRetirada && markerRetirada) {
+    mapRetirada.removeLayer(markerRetirada);
+    markerRetirada = null;
+  }
+  
+  // Reset location data
+  currentLocation = { lat: null, lng: null, address: '' };
+}
+
+
+// Função para renderizar os detalhes de uma retirada no histórico
+function renderRetiradaDetails(item) {
+  const mapLink = item.latitude && item.longitude ? 
+    `https://www.google.com/maps?q=${item.latitude},${item.longitude}` : '#';
+  
+  // Extract simplified address (only street name)
+  const simplifiedAddress = extractSimplifiedAddress(item.endereco);
+  
+  return `
+    <div class="grid grid-cols-1 gap-4 text-sm">
+      <div><strong>Cliente:</strong> ${item.cliente}</div>
+      ${item.observacoes ? `<div><strong>Observações:</strong> ${item.observacoes}</div>` : ''}
+      <div><strong>Endereço:</strong> ${simplifiedAddress}</div>
+      ${item.fotos && item.fotos.length > 0 ? `
+        <div>
+          <strong>Fotos:</strong> ${item.fotos.length} foto(s)
+          <div class="fotos-historico grid grid-cols-2 gap-2 mt-2">
+            ${item.fotos.map((foto, index) => `
+              <div class="foto-preview-historico">
+                <img src="${URL.createObjectURL(foto)}" alt="Foto ${index + 1}" class="w-full h-20 object-cover rounded">
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+    <div class="history-actions">
+      ${item.latitude && item.longitude ? 
+        `<a href="${mapLink}" target="_blank" class="btn btn-secondary">
+          <i class="fas fa-map-marker-alt mr-1"></i> Ver no Mapa
+        </a>` : ''
+      }
+    </div>
+  `;
+}
+
