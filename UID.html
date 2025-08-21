@@ -40,7 +40,7 @@
 
     .historico {
       margin-top: 20px;
-      width: 400px;
+      width: 420px;
       background: white;
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -87,6 +87,13 @@
       width: 0%;
       transition: width 0.3s;
     }
+    canvas {
+      margin-top: 20px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
@@ -111,6 +118,8 @@
     </div>
   </div>
 
+  <canvas id="grafico" width="420" height="300"></canvas>
+
   <script>
     const baseURL = "https://gchat.indaiafibra.com.br/#/gerenciar-cliente/";
     let historico = JSON.parse(localStorage.getItem("historicoUID")) || [];
@@ -122,8 +131,7 @@
           total += ((localStorage[key].length + key.length) * 2);
         }
       }
-      const porcentagem = Math.min((total / (5 * 1024 * 1024)) * 100, 100);
-      return porcentagem;
+      return Math.min((total / (5 * 1024 * 1024)) * 100, 100);
     }
 
     function atualizarBarraUso() {
@@ -160,6 +168,7 @@
         lista.appendChild(div);
       });
       atualizarBarraUso();
+      desenharGrafico();
     }
 
     function acessarOS() {
@@ -168,8 +177,7 @@
       const tipo = document.getElementById("tipoServico").value;
 
       if (uid && cliente) {
-        const link = baseURL + encodeURIComponent(uid);
-        window.open(link, "_blank");
+        window.open(baseURL + encodeURIComponent(uid), "_blank");
 
         const agora = new Date();
         const dataHora = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR");
@@ -212,6 +220,55 @@
         localStorage.removeItem("historicoUID");
         renderHistorico();
       }
+    }
+
+    function desenharGrafico() {
+      const ctx = document.getElementById("grafico").getContext("2d");
+      ctx.clearRect(0, 0, 420, 300);
+
+      // Agrupar por mês
+      const contagem = {};
+      historico.forEach(item => {
+        const mesAno = item.data.split(" ")[0].slice(3); // pega MM/AAAA
+        if (!contagem[mesAno]) {
+          contagem[mesAno] = { Instalação: 0, Manutenção: 0 };
+        }
+        contagem[mesAno][item.tipo]++;
+      });
+
+      const meses = Object.keys(contagem).reverse();
+      const larguraBarra = 30;
+      const espacamento = 20;
+      const alturaMax = 200;
+
+      const maxValor = Math.max(...meses.map(m => Math.max(contagem[m].Instalação, contagem[m].Manutenção)), 1);
+
+      meses.forEach((mes, i) => {
+        const baseX = 50 + i * (larguraBarra * 2 + espacamento);
+
+        // Instalação (azul)
+        const hInst = (contagem[mes].Instalação / maxValor) * alturaMax;
+        ctx.fillStyle = "#007bff";
+        ctx.fillRect(baseX, 280 - hInst, larguraBarra, hInst);
+        ctx.fillText(contagem[mes].Instalação, baseX + 5, 270 - hInst);
+
+        // Manutenção (laranja)
+        const hMan = (contagem[mes].Manutenção / maxValor) * alturaMax;
+        ctx.fillStyle = "#ff8800";
+        ctx.fillRect(baseX + larguraBarra, 280 - hMan, larguraBarra, hMan);
+        ctx.fillText(contagem[mes].Manutenção, baseX + larguraBarra + 5, 270 - hMan);
+
+        // Nome do mês
+        ctx.fillStyle = "#000";
+        ctx.fillText(mes, baseX, 295);
+      });
+
+      // Legenda
+      ctx.fillStyle = "#007bff"; ctx.fillRect(10, 10, 12, 12);
+      ctx.fillStyle = "#000"; ctx.fillText("Instalação", 28, 20);
+
+      ctx.fillStyle = "#ff8800"; ctx.fillRect(110, 10, 12, 12);
+      ctx.fillStyle = "#000"; ctx.fillText("Manutenção", 128, 20);
     }
 
     document.getElementById("uid").addEventListener("keypress", function(e) {
