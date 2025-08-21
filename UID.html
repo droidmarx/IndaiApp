@@ -1,170 +1,208 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acessar Ordem de Serviço</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        .input-container {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        input {
-            padding: 10px 35px 10px 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            width: 250px;
-        }
-        .clear-btn {
-            position: absolute;
-            right: 10px;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            color: #888;
-        }
-        .clear-btn:hover {
-            color: #000;
-        }
-        button {
-            padding: 10px;
-            font-size: 16px;
-            margin: 10px 0;
-            border-radius: 5px;
-            border: none;
-            background: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .historico {
-            margin-top: 20px;
-            width: 320px;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
-        }
-        .historico h3 {
-            margin-top: 0;
-            font-size: 18px;
-            color: #333;
-            text-align: center;
-        }
-        .historico-item {
-            font-size: 14px;
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .historico-item:last-child {
-            border-bottom: none;
-        }
-        .historico-item a {
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-        }
-        .historico-item a:hover {
-            text-decoration: underline;
-        }
-        .data {
-            font-size: 12px;
-            color: #666;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acessar Ordem de Serviço</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .input-container {
+      margin-bottom: 10px;
+    }
+    input, select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 250px;
+      margin-bottom: 10px;
+    }
+    .clear-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .historico {
+      margin-top: 20px;
+      width: 360px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+    .historico h3 {
+      margin-top: 0;
+      font-size: 18px;
+      text-align: center;
+    }
+    .historico-item {
+      font-size: 14px;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .historico-item:last-child {
+      border-bottom: none;
+    }
+    .historico-item a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .data {
+      display: block;
+      font-size: 12px;
+      color: #666;
+    }
+    .progress-bar {
+      margin-top: 15px;
+      width: 100%;
+      height: 15px;
+      background: #e9ecef;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #28a745;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
 </head>
 <body>
 
-    <h2>Acessar Ordem de Serviço</h2>
-    <div class="input-container">
-        <input type="text" id="uid" placeholder="Digite o UID">
-        <button class="clear-btn" onclick="limparInput()">✕</button>
+  <h2>Acessar Ordem de Serviço</h2>
+
+  <div class="input-container">
+    <input type="text" id="uid" placeholder="Digite o UID">
+  </div>
+  <div class="input-container">
+    <input type="text" id="cliente" placeholder="Nome do Cliente">
+  </div>
+  <div class="input-container">
+    <select id="tipoServico">
+      <option value="Instalação">Instalação</option>
+      <option value="Manutenção">Manutenção</option>
+    </select>
+  </div>
+  <button onclick="acessarOS()">Acessar</button>
+  <button class="clear-btn" onclick="limparTudo()">Limpar Histórico</button>
+
+  <div class="historico">
+    <h3>Histórico</h3>
+    <div id="listaHistorico"></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
     </div>
-    <button onclick="acessarOS()">Acessar</button>
+  </div>
 
-    <div class="historico">
-        <h3>Histórico</h3>
-        <div id="listaHistorico"></div>
-    </div>
+  <script>
+    const baseURL = "https://gchat.indaiafibra.com.br/#/gerenciar-cliente/";
+    let historico = JSON.parse(localStorage.getItem("historicoUID")) || [];
 
-    <script>
-        const baseURL = "https://gchat.indaiafibra.com.br/#/gerenciar-cliente/";
-        let historico = JSON.parse(localStorage.getItem("historicoUID")) || [];
-
-        function renderHistorico() {
-            const lista = document.getElementById("listaHistorico");
-            lista.innerHTML = "";
-            historico.forEach(item => {
-                const div = document.createElement("div");
-                div.classList.add("historico-item");
-
-                const link = document.createElement("a");
-                link.href = baseURL + encodeURIComponent(item.uid);
-                link.target = "_blank";
-                link.textContent = item.uid;
-
-                const data = document.createElement("span");
-                data.classList.add("data");
-                data.textContent = item.data;
-
-                div.appendChild(link);
-                div.appendChild(data);
-                lista.appendChild(div);
-            });
+    function calcularUsoLocalStorage() {
+      let total = 0;
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          total += ((localStorage[key].length + key.length) * 2);
         }
+      }
+      const usadoKB = (total / 1024).toFixed(2);
+      const porcentagem = Math.min((total / (5 * 1024 * 1024)) * 100, 100); // limite 5MB
+      return { usadoKB, porcentagem };
+    }
 
-        function acessarOS() {
-            const uid = document.getElementById("uid").value.trim();
-            if (uid) {
-                const link = baseURL + encodeURIComponent(uid);
-                window.open(link, "_blank");
+    function atualizarBarraUso() {
+      const { porcentagem } = calcularUsoLocalStorage();
+      const fill = document.getElementById("progressFill");
+      fill.style.width = porcentagem + "%";
 
-                const agora = new Date();
-                const dataHora = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR");
-
-                historico.unshift({ uid, data: dataHora });
-
-                // Mantém apenas os últimos 20 registros
-                if (historico.length > 20) {
-                    historico = historico.slice(0, 20);
-                }
-
-                localStorage.setItem("historicoUID", JSON.stringify(historico));
-                renderHistorico();
-            } else {
-                alert("Por favor, digite um UID válido.");
-            }
-        }
-
-        function limparInput() {
-            document.getElementById("uid").value = "";
-        }
-
-        document.getElementById("uid").addEventListener("keypress", function(e) {
-            if (e.key === "Enter") {
-                acessarOS();
-            }
-        });
-
+      if (porcentagem > 89) {
+        historico = historico.slice(0, Math.floor(historico.length * 0.9));
+        localStorage.setItem("historicoUID", JSON.stringify(historico));
         renderHistorico();
-    </script>
+      }
+
+      fill.style.background = porcentagem > 89 ? "#dc3545" : "#28a745";
+    }
+
+    function renderHistorico() {
+      const lista = document.getElementById("listaHistorico");
+      lista.innerHTML = "";
+      historico.forEach(item => {
+        const div = document.createElement("div");
+        div.classList.add("historico-item");
+
+        div.innerHTML = `
+          <a href="${baseURL + encodeURIComponent(item.uid)}" target="_blank">${item.uid}</a><br>
+          <span><b>Cliente:</b> ${item.cliente}</span><br>
+          <span><b>Serviço:</b> ${item.tipo}</span><br>
+          <span class="data">${item.data}</span>
+        `;
+        lista.appendChild(div);
+      });
+      atualizarBarraUso();
+    }
+
+    function acessarOS() {
+      const uid = document.getElementById("uid").value.trim();
+      const cliente = document.getElementById("cliente").value.trim();
+      const tipo = document.getElementById("tipoServico").value;
+
+      if (uid && cliente) {
+        const link = baseURL + encodeURIComponent(uid);
+        window.open(link, "_blank");
+
+        const agora = new Date();
+        const dataHora = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR");
+
+        historico.unshift({ uid, cliente, tipo, data: dataHora });
+
+        localStorage.setItem("historicoUID", JSON.stringify(historico));
+        renderHistorico();
+      } else {
+        alert("Por favor, preencha UID e Nome do Cliente.");
+      }
+    }
+
+    function limparTudo() {
+      if (confirm("Deseja realmente limpar o histórico?")) {
+        historico = [];
+        localStorage.removeItem("historicoUID");
+        renderHistorico();
+      }
+    }
+
+    document.getElementById("uid").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") acessarOS();
+    });
+
+    renderHistorico();
+  </script>
 
 </body>
 </html>
