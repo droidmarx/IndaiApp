@@ -1050,7 +1050,7 @@ async function enviarTelegram(tipo) {
     
     // Redirect to Telegram after a short delay
     setTimeout(() => {
-      window.open('https://t.me/c/1989058391/167773', '_blank');
+      window.open('https://t.me/c/1989058391/167776', '_blank');
     }, 1500);
     
   } catch (error) {
